@@ -74,6 +74,10 @@
   .card-ipa { font-size: 14px; color: var(--text2); margin-top: 8px; letter-spacing: 0.5px; }
   .card-num { position: absolute; top: 14px; right: 16px; font-size: 11px; color: var(--text2); font-weight: 600; }
   .card-tap-hint { font-size: 13px; color: var(--text2); margin-top: 16px; }
+  .front-audio-icon { font-size: 72px; margin: 8px 0 4px; animation: audioPulse 2s ease-in-out infinite; }
+  @keyframes audioPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.1);opacity:0.8} }
+  .back-french { font-size: 34px; font-weight: 800; color: #5b21b6; text-align: center; letter-spacing: -0.5px; }
+  .back-ipa { font-size: 13px; color: var(--text2); margin-top: 4px; margin-bottom: 4px; }
 
   .pronounce-btn { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.3); color: #5b21b6; border-radius: 30px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.15s; margin-top: 16px; }
   .pronounce-btn:active { background: rgba(124,58,237,0.2); transform: scale(0.96); }
@@ -159,20 +163,22 @@
       <div class="card-inner" id="card-inner">
         <div class="card-face front" id="card-front" onclick="flipCard()">
           <span class="card-num" id="card-num"></span>
-          <div class="card-tag">FRENCH</div>
-          <div class="card-word" id="front-word">—</div>
-          <div class="card-ipa" id="front-ipa"></div>
-          <button class="pronounce-btn" id="pbtn-front" onclick="pronounce(event,'front')">🔊 Listen</button>
+          <div class="card-tag">🎧 この単語は？</div>
+          <div class="front-audio-icon">🔊</div>
+          <button class="pronounce-btn" id="pbtn-front" onclick="pronounce(event,'front')">🔊 もう一度聴く</button>
           <div class="card-tap-hint">tap to reveal</div>
         </div>
         <div class="card-face back">
           <span class="card-num" id="card-num-back"></span>
-          <div class="card-tag">ENGLISH</div>
+          <div class="card-tag">ANSWER</div>
+          <div class="back-french" id="back-french">—</div>
+          <div class="back-ipa" id="back-ipa"></div>
+          <div class="card-divider"></div>
           <div class="card-translation" id="back-translation">—</div>
           <div class="card-divider"></div>
           <div class="card-example">
             <div class="ex-fr" id="back-ex-fr"></div>
-            <button class="pronounce-btn ex-pronounce-btn" id="pbtn-ex-fr" onclick="pronounce(event,'ex-fr')" style="display:none">🔊 French sentence</button>
+            <button class="pronounce-btn ex-pronounce-btn" id="pbtn-ex-fr" onclick="pronounce(event,'ex-fr')" style="display:none">🔊 例文を聴く</button>
             <div class="ex-en" id="back-ex-en" style="margin-top:8px"></div>
           </div>
         </div>
@@ -302,8 +308,9 @@ function renderCard(card) {
   currentFrench=card.french; currentIpa=card.ipa||''; currentExFr=card.exFr||'';
   document.getElementById('card-num').textContent='#'+card.id;
   document.getElementById('card-num-back').textContent='#'+card.id;
-  document.getElementById('front-word').textContent=card.french;
-  document.getElementById('front-ipa').textContent=card.ipa||'';
+  // Back face: French word + IPA + English + examples
+  document.getElementById('back-french').textContent=card.french;
+  document.getElementById('back-ipa').textContent=card.ipa||'';
   document.getElementById('back-translation').textContent=card.english;
   document.getElementById('back-ex-fr').textContent=card.exFr||'';
   document.getElementById('back-ex-en').textContent=card.exEn||'';
@@ -318,6 +325,24 @@ function renderCard(card) {
   document.getElementById('int-easy').textContent=intLabel(cs,3);
   var total=sessionReviewed+queue.length+learningQueue.length+1;
   document.getElementById('progress-fill').style.width=(sessionReviewed/Math.max(total,1)*100)+'%';
+  // Auto-play French pronunciation
+  setTimeout(function(){ autoPlay(); }, 400);
+}
+
+function autoPlay() {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(currentFrench.toLowerCase());
+  u.lang='fr-FR'; u.rate=0.85;
+  var voices=synthVoices.length?synthVoices:window.speechSynthesis.getVoices();
+  var v=voices.find(function(v){return v.lang==='fr-FR'&&v.name.indexOf('Compact')<0;})||
+        voices.find(function(v){return v.lang.startsWith('fr');});
+  if (v) u.voice=v;
+  var btn=document.getElementById('pbtn-front');
+  if (btn) btn.classList.add('speaking');
+  u.onend=function(){if(btn)btn.classList.remove('speaking');};
+  u.onerror=function(){if(btn)btn.classList.remove('speaking');};
+  window.speechSynthesis.speak(u);
 }
 
 function flipCard() {
