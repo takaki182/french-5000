@@ -92,6 +92,14 @@
   .ex-fr { color: #4c1d95; font-style: italic; margin-bottom: 4px; }
   .ex-en { color: var(--text2); font-size: 13px; }
 
+  .back-stage2 { display: none; flex-direction: column; align-items: center; width: 100%; }
+  .back-stage2.show { display: flex; animation: fadeIn 0.3s ease; }
+  .back-stage1-content { display: flex; flex-direction: column; align-items: center; width: 100%; transition: opacity 0.25s; }
+  .back-stage1-content.hide { opacity: 0; pointer-events: none; position: absolute; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .step-dots { display: flex; gap: 6px; margin-bottom: 12px; }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: #ddd6fe; }
+  .step-dot.active { background: var(--accent); }
   .flip-hint { text-align: center; padding: 4px 0 10px; font-size: 13px; color: var(--text2); }
   .answer-area { padding: 0 16px 28px; display: none; flex-direction: column; gap: 10px; }
   .answer-area.show { display: flex; }
@@ -128,18 +136,18 @@
 <!-- HOME -->
 <div id="home" class="screen active">
   <div class="home-header">
-    <h1>🇫🇷 French <span>Top 5000</span></h1>
-    <p>5000 most frequent French words — French → English</p>
+    <h1>🇫🇷 Français <span>Top 5000</span></h1>
+    <p>5000 mots français les plus fréquents — Français → Anglais</p>
   </div>
-  <div class="section-title">Overview</div>
+  <div class="section-title">Aperçu</div>
   <div class="stats-bar">
-    <div class="stat-chip new-s"><div class="num" id="total-new">-</div><div class="lbl">New</div></div>
-    <div class="stat-chip due-s"><div class="num" id="total-due">-</div><div class="lbl">Due</div></div>
-    <div class="stat-chip done-s"><div class="num" id="total-done">-</div><div class="lbl">Learned</div></div>
+    <div class="stat-chip new-s"><div class="num" id="total-new">-</div><div class="lbl">Nouveau</div></div>
+    <div class="stat-chip due-s"><div class="num" id="total-due">-</div><div class="lbl">À revoir</div></div>
+    <div class="stat-chip done-s"><div class="num" id="total-done">-</div><div class="lbl">Appris</div></div>
   </div>
-  <div class="section-title">Study All Due</div>
-  <button class="study-all-btn" onclick="studyAll()">▶ Study All Due Cards</button>
-  <div class="section-title">Categories (100 words each)</div>
+  <div class="section-title">Étudier maintenant</div>
+  <button class="study-all-btn" onclick="studyAll()">▶ Étudier toutes les cartes dues</button>
+  <div class="section-title">Catégories (100 mots chacune)</div>
   <div class="cat-grid" id="cat-grid"></div>
 </div>
 
@@ -149,7 +157,7 @@
     <button class="back-btn" onclick="goHome()">←</button>
     <div class="study-info">
       <div class="study-cat" id="study-cat-label">Category</div>
-      <div class="study-mode-label">🇫🇷 French → English</div>
+      <div class="study-mode-label">🇫🇷 Français → Anglais</div>
     </div>
   </div>
   <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
@@ -163,37 +171,46 @@
       <div class="card-inner" id="card-inner">
         <div class="card-face front" id="card-front" onclick="flipCard()">
           <span class="card-num" id="card-num"></span>
-          <div class="card-tag">🎧 この単語は？</div>
+          <div class="step-dots"><div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+          <div class="card-tag">🎧 Quel mot est-ce ?</div>
           <div class="front-audio-icon">🔊</div>
-          <button class="pronounce-btn" id="pbtn-front" onclick="pronounce(event,'front')">🔊 もう一度聴く</button>
-          <div class="card-tap-hint">tap to reveal</div>
+          <button class="pronounce-btn" id="pbtn-front" onclick="pronounce(event,'front')">🔊 Réécouter</button>
+          <div class="card-tap-hint">Appuyez pour voir le mot</div>
         </div>
-        <div class="card-face back">
+        <div class="card-face back" id="card-back" onclick="revealMeaning()">
           <span class="card-num" id="card-num-back"></span>
-          <div class="card-tag">ANSWER</div>
-          <div class="back-french" id="back-french">—</div>
-          <div class="back-ipa" id="back-ipa"></div>
-          <div class="card-divider"></div>
-          <div class="card-translation" id="back-translation">—</div>
-          <div class="card-divider"></div>
-          <div class="card-example">
-            <div class="ex-fr" id="back-ex-fr"></div>
-            <button class="pronounce-btn ex-pronounce-btn" id="pbtn-ex-fr" onclick="pronounce(event,'ex-fr')" style="display:none">🔊 例文を聴く</button>
-            <div class="ex-en" id="back-ex-en" style="margin-top:8px"></div>
+          <div class="back-stage1-content" id="back-s1">
+            <div class="step-dots"><div class="step-dot"></div><div class="step-dot active"></div><div class="step-dot"></div></div>
+            <div class="card-tag">LE MOT</div>
+            <div class="back-french" id="back-french">—</div>
+            <div class="back-ipa" id="back-ipa"></div>
+            <button class="pronounce-btn" id="pbtn-back-fr" onclick="pronounce(event,'front')" style="margin-top:20px">🔊 Prononcer</button>
+            <div class="card-tap-hint" style="margin-top:14px">Appuyez pour voir la signification</div>
+          </div>
+          <div class="back-stage2" id="back-s2">
+            <div class="step-dots"><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot active"></div></div>
+            <div class="card-tag">SIGNIFICATION</div>
+            <div class="card-translation" id="back-translation">—</div>
+            <div class="card-divider"></div>
+            <div class="card-example">
+              <div class="ex-fr" id="back-ex-fr"></div>
+              <button class="pronounce-btn ex-pronounce-btn" id="pbtn-ex-fr" onclick="pronounce(event,'ex-fr')" style="display:none">🔊 Exemple</button>
+              <div class="ex-en" id="back-ex-en" style="margin-top:8px"></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="flip-hint" id="flip-hint">Tap the card to reveal the answer</div>
+  <div class="flip-hint" id="flip-hint">Appuyez sur la carte pour révéler</div>
   <div class="answer-area" id="answer-area">
     <div class="answer-row">
-      <button class="answer-btn again" onclick="answer(0)">Again<span class="btn-interval" id="int-again"></span></button>
-      <button class="answer-btn hard"  onclick="answer(1)">Hard<span class="btn-interval" id="int-hard"></span></button>
+      <button class="answer-btn again" onclick="answer(0)">Encore<span class="btn-interval" id="int-again"></span></button>
+      <button class="answer-btn hard"  onclick="answer(1)">Difficile<span class="btn-interval" id="int-hard"></span></button>
     </div>
     <div class="answer-row">
-      <button class="answer-btn good" onclick="answer(2)">Good<span class="btn-interval" id="int-good"></span></button>
-      <button class="answer-btn easy" onclick="answer(3)">Easy<span class="btn-interval" id="int-easy"></span></button>
+      <button class="answer-btn good" onclick="answer(2)">Bien<span class="btn-interval" id="int-good"></span></button>
+      <button class="answer-btn easy" onclick="answer(3)">Facile<span class="btn-interval" id="int-easy"></span></button>
     </div>
   </div>
 </div>
@@ -201,14 +218,14 @@
 <!-- DONE -->
 <div id="done-overlay">
   <div class="done-emoji">🎉</div>
-  <div class="done-title">Session Complete!</div>
+  <div class="done-title">Session terminée !</div>
   <div class="done-sub" id="done-sub">You've reviewed all due cards.</div>
   <div class="done-stats">
-    <div class="done-stat"><div class="n" id="done-reviewed">0</div><div class="l">Reviewed</div></div>
+    <div class="done-stat"><div class="n" id="done-reviewed">0</div><div class="l">Révisé</div></div>
     <div class="done-stat"><div class="n" id="done-correct">0</div><div class="l">Correct</div></div>
   </div>
-  <button class="done-btn" onclick="doneMore()">Study New Cards</button>
-  <button class="done-btn secondary" onclick="goHome()">Back to Home</button>
+  <button class="done-btn" onclick="doneMore()">Nouveaux mots</button>
+  <button class="done-btn secondary" onclick="goHome()">Accueil</button>
 </div>
 
 <script>
@@ -262,7 +279,7 @@ function renderHome() {
     var pct=Math.round((st.done/words.length)*100);
     var card=document.createElement('div');
     card.className='cat-card'+(st.due>0?' has-due':'');
-    var dueHtml=st.due>0?'<span class="due-count">'+st.due+' due</span>':st.nw>0?'<span>'+st.nw+' new</span>':'<span class="done-count">✓ done</span>';
+    var dueHtml=st.due>0?'<span class="due-count">'+st.due+' due</span>':st.nw>0?'<span>'+st.nw+' nouveau</span>':'<span class="done-count">✓ done</span>';
     card.innerHTML='<div class="cat-title">#'+start+'–'+end+'</div><div class="cat-subtitle">'+words.length+' words</div><div class="cat-progress-bar"><div class="cat-progress-fill" style="width:'+pct+'%"></div></div><div class="cat-counts"><span>'+pct+'%</span>'+dueHtml+'</div>';
     (function(s){card.onclick=function(){studyCat(s);};})(start);
     grid.appendChild(card);
@@ -279,7 +296,7 @@ function studyCat(start) {
   currentCat=start; var end=Math.min(start+99,VOCAB[VOCAB.length-1].id);
   startStudy(catWords(start),'#'+start+'–'+end);
 }
-function studyAll() { currentCat=null; startStudy(VOCAB,'All Categories'); }
+function studyAll() { currentCat=null; startStudy(VOCAB,'Toutes les catégories'); }
 
 function startStudy(words,label) {
   queue=buildQueue(words); learningQueue=[]; sessionReviewed=0; sessionCorrect=0;
@@ -308,7 +325,11 @@ function renderCard(card) {
   currentFrench=card.french; currentIpa=card.ipa||''; currentExFr=card.exFr||'';
   document.getElementById('card-num').textContent='#'+card.id;
   document.getElementById('card-num-back').textContent='#'+card.id;
-  // Back face: French word + IPA + English + examples
+  // reset 3-stage
+  document.getElementById('back-s1').classList.remove('hide');
+  document.getElementById('back-s2').classList.remove('show');
+  document.getElementById('card-back').style.cursor='pointer';
+  // populate content
   document.getElementById('back-french').textContent=card.french;
   document.getElementById('back-ipa').textContent=card.ipa||'';
   document.getElementById('back-translation').textContent=card.english;
@@ -348,8 +369,17 @@ function autoPlay() {
 function flipCard() {
   if (isFlipped) return; isFlipped=true;
   document.getElementById('card-inner').classList.add('flipped');
-  document.getElementById('answer-area').classList.add('show');
   document.getElementById('flip-hint').style.display='none';
+}
+
+function revealMeaning() {
+  if (!isFlipped) return;
+  var s2=document.getElementById('back-s2');
+  if (s2.classList.contains('show')) return;
+  document.getElementById('back-s1').classList.add('hide');
+  s2.classList.add('show');
+  document.getElementById('card-back').style.cursor='default';
+  document.getElementById('answer-area').classList.add('show');
 }
 
 function answer(rating) {
@@ -362,9 +392,9 @@ function answer(rating) {
 }
 
 function updateChips() {
-  document.getElementById('q-new').textContent=queue.filter(function(c){return getCS(c.id).status==='new';}).length+' new';
-  document.getElementById('q-lrn').textContent=learningQueue.length+' lrn';
-  document.getElementById('q-rev').textContent=queue.filter(function(c){return getCS(c.id).status==='review';}).length+' rev';
+  document.getElementById('q-new').textContent=queue.filter(function(c){return getCS(c.id).status==='new';}).length+' nouveau';
+  document.getElementById('q-lrn').textContent=learningQueue.length+' appren.';
+  document.getElementById('q-rev').textContent=queue.filter(function(c){return getCS(c.id).status==='review';}).length+' révision';
 }
 
 var synthVoices=[];
@@ -394,7 +424,7 @@ function pronounce(e,side) {
 function showDone(type) {
   document.getElementById('done-reviewed').textContent=sessionReviewed;
   document.getElementById('done-correct').textContent=sessionCorrect;
-  document.getElementById('done-sub').textContent=type==='all-done'?'No cards due. Come back tomorrow!':'Great session! '+sessionCorrect+' of '+sessionReviewed+' correct.';
+  document.getElementById('done-sub').textContent=type==='all-done'?'Aucune carte due. Revenez demain !':'Bravo ! '+sessionCorrect+' sur '+sessionReviewed+' correctes.';
   document.getElementById('done-overlay').classList.add('show');
 }
 
