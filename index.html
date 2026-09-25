@@ -239,8 +239,14 @@ var sessionReviewed = 0, sessionCorrect = 0, isFlipped = false;
 var currentFrench = '', currentIpa = '', currentExFr = '';
 var currentCat = null;
 
-function getState() { try { return JSON.parse(localStorage.getItem('fv_5000') || '{}'); } catch(e) { return {}; } }
-function setState(s) { localStorage.setItem('fv_5000', JSON.stringify(s)); }
+var _stateCache = null;
+function getState() {
+  if (_stateCache) return _stateCache;
+  try { _stateCache = JSON.parse(localStorage.getItem('fv_5000') || '{}'); }
+  catch(e) { _stateCache = {}; }
+  return _stateCache;
+}
+function setState(s) { _stateCache = s; localStorage.setItem('fv_5000', JSON.stringify(s)); }
 function getCS(id) { return getState()[id] || { interval:0, ease:2.5, due:0, reps:0, lapses:0, status:'new' }; }
 function setCS(id, cs) { var s=getState(); s[id]=cs; setState(s); }
 
