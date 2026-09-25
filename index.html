@@ -353,11 +353,15 @@ function renderCard(card) {
   setTimeout(function(){ autoPlay(); }, 400);
 }
 
+function cleanFR(text) {
+  return text.replace(/\s*\([mf]\)\s*$/i, '').trim();
+}
+
 function speakFRutterance(text, onDone) {
   var voices=synthVoices.length?synthVoices:window.speechSynthesis.getVoices();
   var v=voices.find(function(v){return v.lang==='fr-FR'&&v.name.indexOf('Compact')<0;})||
         voices.find(function(v){return v.lang.startsWith('fr');});
-  var u=new SpeechSynthesisUtterance(text.toLowerCase());
+  var u=new SpeechSynthesisUtterance(cleanFR(text).toLowerCase());
   u.lang='fr-FR'; u.rate=0.85;
   if (v) u.voice=v;
   if (onDone) u.onend=onDone;
@@ -430,7 +434,7 @@ function pronounce(e,side) {
   if (!window.speechSynthesis) { alert('Speech not supported.'); return; }
   window.speechSynthesis.cancel();
   var text = side==='ex-fr' ? currentExFr : currentFrench;
-  var u=new SpeechSynthesisUtterance(text.toLowerCase());
+  var u=new SpeechSynthesisUtterance(cleanFR(text).toLowerCase());
   u.lang='fr-FR'; u.rate=0.85;
   var voices=synthVoices.length?synthVoices:window.speechSynthesis.getVoices();
   var v=voices.find(function(v){return v.lang==='fr-FR'&&v.name.indexOf('Compact')<0;})||
