@@ -353,20 +353,30 @@ function renderCard(card) {
   setTimeout(function(){ autoPlay(); }, 400);
 }
 
-function autoPlay() {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  var u=new SpeechSynthesisUtterance(currentFrench.toLowerCase());
-  u.lang='fr-FR'; u.rate=0.85;
+function speakFRutterance(text, onDone) {
   var voices=synthVoices.length?synthVoices:window.speechSynthesis.getVoices();
   var v=voices.find(function(v){return v.lang==='fr-FR'&&v.name.indexOf('Compact')<0;})||
         voices.find(function(v){return v.lang.startsWith('fr');});
+  var u=new SpeechSynthesisUtterance(text.toLowerCase());
+  u.lang='fr-FR'; u.rate=0.85;
   if (v) u.voice=v;
+  if (onDone) u.onend=onDone;
+  window.speechSynthesis.speak(u);
+}
+
+function autoPlay() {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
   var btn=document.getElementById('pbtn-front');
   if (btn) btn.classList.add('speaking');
-  u.onend=function(){if(btn)btn.classList.remove('speaking');};
-  u.onerror=function(){if(btn)btn.classList.remove('speaking');};
-  window.speechSynthesis.speak(u);
+  var done=function(){if(btn)btn.classList.remove('speaking');};
+  if (currentExFr) {
+    speakFRutterance(currentFrench, function() {
+      setTimeout(function(){ speakFRutterance(currentExFr, done); }, 600);
+    });
+  } else {
+    speakFRutterance(currentFrench, done);
+  }
 }
 
 function flipCard() {
